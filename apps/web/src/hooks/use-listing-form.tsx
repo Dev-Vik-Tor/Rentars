@@ -45,6 +45,11 @@ export function useListingForm(ownerKey: string | null = null) {
     quietHoursStart: '',
     quietHoursEnd: '',
     additionalRules: '',
+    // Defaults the pricing step shows, so validation sees the same values the host sees.
+    minNights: 1,
+    maxNights: null,
+    checkInTime: '15:00',
+    checkOutTime: '11:00',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pendingDraft, setPendingDraft] = useState<RestoredDraft | null>(null);

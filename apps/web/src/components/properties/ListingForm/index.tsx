@@ -123,7 +123,11 @@ export default function ListingForm() {
     setPhotoProblem(null);
 
     // Full re-validation, because a restored draft or an earlier step may be stale.
-    const { errors: allErrors, firstInvalidStep } = validateListing(formData);
+    // Terms acceptance lives outside the form data, so it is passed in here.
+    const { errors: allErrors, firstInvalidStep } = validateListing({
+      ...formData,
+      agreeToTerms: termsAcceptance !== null,
+    });
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors);
       if (firstInvalidStep) goToStep(firstInvalidStep);
@@ -131,11 +135,8 @@ export default function ListingForm() {
       return;
     }
 
-    if (!termsAcceptance) {
-      setErrors({ submit: 'You must accept the platform terms before publishing your listing.' });
-      setTimeout(() => submitErrorRef.current?.focus(), 50);
-      return;
-    }
+    // Validation above already requires terms; this narrows the type for the request below.
+    if (!termsAcceptance) return;
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const token = localStorage.getItem('token') ?? '';
@@ -197,10 +198,9 @@ export default function ListingForm() {
 
       if (failed.length > 0) {
         const uploaded = pending.length - failed.length;
+        const uploadedNote = uploaded > 0 ? ` (${uploaded} uploaded)` : '';
         setPhotoProblem(
-          `Your listing was created, but ${failed.length} of ${pending.length} photo(s) did not upload` +
-            (uploaded > 0 ? ` (${uploaded} uploaded)` : '') +
-            `: ${lastError}. Press "Retry photo upload" to try the failed photos again.`
+          `Your listing was created, but ${failed.length} of ${pending.length} photo(s) did not upload${uploadedNote}: ${lastError}. Press "Retry photo upload" to try the failed photos again.`
         );
         setTimeout(() => submitErrorRef.current?.focus(), 50);
         return;
@@ -223,10 +223,7 @@ export default function ListingForm() {
   return (
     <div className={formStyles.container}>
       {notice && (
-        <div
-          role="status"
-          className="mb-4 flex items-start justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900"
-        >
+        <output className="mb-4 flex items-start justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
           <span>{notice}</span>
           <button type="button" onClick={dismissNotice} className="underline">
             Dismiss
@@ -235,10 +232,7 @@ export default function ListingForm() {
       )}
 
       {hasPendingDraft && !draftDialogOpen && (
-        <div
-          role="status"
-          className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900"
-        >
+        <output className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
           <span>
             You have a saved draft
             {pendingDraft ? `. ${summarizeDraft(pendingDraft, Date.now())}` : ''}
@@ -251,14 +245,11 @@ export default function ListingForm() {
               Discard
             </button>
           </span>
-        </div>
+        </output>
       )}
 
       {restoredNeedsAttention.length > 0 && (
-        <div
-          role="status"
-          className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
-        >
+        <output className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
           <p className="font-semibold">Please review your restored draft</p>
           <p>
             These need your attention before you submit:{' '}
@@ -269,7 +260,7 @@ export default function ListingForm() {
               .join(', ')}
             .
           </p>
-        </div>
+        </output>
       )}
 
       <DraftRestoreDialog
