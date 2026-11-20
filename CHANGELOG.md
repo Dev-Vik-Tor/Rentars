@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — listing drafts, validation, photo uploads and moderation (#919–#922)
+- Listing drafts are saved per host wallet, expire after 14 days, carry a schema version, and are never restored without a prompt. Photos are not saved in drafts and must be added again. Invalid or legacy values are listed for review (#919).
+- Listing validation runs at every step and on submit. The API rejects listings with invalid values on create and update, with the same limits the form uses. The form now sends the API's field names, and collects the country and coordinates the API requires (#920).
+- Photos upload one at a time after the listing is created. Failures are reported per photo, and a retry reuses the listing instead of creating another. Removing a photo keeps the record if storage deletion fails. Storage objects from failed inserts are cleaned up (#921).
+- New photos are pending review and are not public until a moderator approves them. Rejected photos show the reason to the host. Public property and image responses include approved photos only. Moderation changes are audited and invalidate cached property responses (#922).
+
 ### Security — 2026-10-19
 
 #### #740 — Recovery and verification token hardening
